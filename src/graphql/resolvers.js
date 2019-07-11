@@ -1,46 +1,94 @@
-// importamos los modelos de la base de datos
-const { UserModel } = require('../dataBase/models');
 
-// importamos las acciones(logica de negocio) para los resolvers
-const {
-  loginAction,
-  signupAction,
-} = require('../actions/userActions');
+const User    = require("../models/User");
+const Product = require("../models/Product");
+const Comment = require("../models/Comments");
 
-// Resolvers funciones que son la logica del negocio y son acciones que define como se
-// comportan las queries y las mutations
-// parent --- es lo que necesita la funcion para que funcione como un resolver
-// args -- argumentos que recibe la funcion
-// context -- se variables que se comparte atravez de todos los resolvers
-// info 
+const jwt     = require("jsonwebtoken");
+const bcrypt  = require("bcryptjs")
 
 const resolvers = {
   Query: {
-    queryWithLogin: () => {
-      return { message: 'este es un query con login' }
-    },
-    simpleQuery: () => {
-      return { message: 'este es un simple query' }
-    }
+    hi: () => {"hi there!"},
+    test: () => {"test"},
   },
   Mutation: {
-    signup: (parent, args, context, info) => {
-      return signupAction({ ...args.data }).then(result => {
-        return result;
-      }).catch(err => {
-        return err;
-      });
-    },
-    login: (parent, args, context, info) => {
-      const { email, password } = args;
-      return loginAction(email, password).then(result => {
-        return result;
-      }).catch(error => {
-        return error;
-      })
-    }
-  }
-}
 
-// exporta resolvers
+    register: (_, {user_info: { name, email, lastname, password }} ) => {
+
+      const user = new User({
+        name: name,
+        email: email,
+        lastname: lastname,
+        password: password,
+      });
+      try{
+        user.save();
+        return { 
+          token: jwt.sign(user.toJSON(), process.env.SECRET, {expiresIn: "15min"}), 
+          message: `Successfully registered: ${name}.` 
+        };
+      } catch(error) {
+        return { token: "", message: `User not reistered: ${error}` };
+      }
+    },
+
+    login: async (_, { login_info: { email, password }}) => {
+
+      const user = await User.findOne({ email: email });
+      if (!user) {
+        return { token: "", message: `Email ${email} was not found.` };
+      }
+      const valid = await bcrypt.compare(password, user.password);
+      if (!valid) {
+        return { token: "", message: "Wrong password." };
+      }
+      const payload = {
+        id: user.id,
+        name: user.name,
+        lastname: user.lastname,
+        email: user.email,
+      }
+      return {
+        token: jwt.sign(payload, process.env.SECRET, {expiresIn: "15min"}), 
+        message: `Successfully logged: ${email} in!`
+      };
+    },
+
+    add_product: (_, { product_info: { name, price, stock, description, photo } } ) => {
+
+      const product = new Product({
+        name: name,
+        price: price,
+        stock: stock,
+        description: description,
+        photo: photo,
+      });
+
+      try {
+        product.save();
+        return {message: `Successfully registered ${name}`};
+      }
+      catch(error) {
+        return {message: `Something wen't wrong: ${error}`}
+      }
+    },
+
+    post_comment: (_, { comment_info: { content, posted_by } }) => {
+
+      const comment = new Comment({
+        content: content,
+        posted_by: posted_by,
+      });
+
+      try {
+        comment.save();
+        return { message: `Comment posted!` };
+      } 
+      catch(error) {
+        return { message: `Something went wrong: ${error}` };
+      }
+    },
+  }
+};
+
 module.exports = resolvers;

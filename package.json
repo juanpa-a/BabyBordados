@@ -1,33 +1,26 @@
 {
-  "name": "cinta-negra-b31-full",
+  "name": "babybordados",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node src/server.js",
-    "development": "nodemon src/server.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/AndersM79/cinta-negra-b31-full.git"
+    "url": "git+https://github.com/juanpa-a/BabyBordados.git"
   },
-  "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/AndersM79/cinta-negra-b31-full/issues"
+    "url": "https://github.com/juanpa-a/BabyBordados/issues"
   },
-  "homepage": "https://github.com/AndersM79/cinta-negra-b31-full#readme",
+  "homepage": "https://github.com/juanpa-a/BabyBordados#readme",
   "dependencies": {
     "apollo-server": "^2.6.7",
-    "bcrypt": "^3.0.6",
-    "graphql": "^14.4.0",
+    "bcryptjs": "^2.4.3",
+    "graphql": "^14.4.2",
     "jsonwebtoken": "^8.5.1",
-    "mongoose": "^5.6.1"
-  },
-  "devDependencies": {
-    "dotenv": "^8.0.0",
-    "nodemon": "^1.19.1"
+    "mongoose": "^5.6.3"
   }
 }

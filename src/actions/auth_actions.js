@@ -1,63 +1,55 @@
 const jwt = require("jsonwebtoken");
-const { User } = require("../models/User");
-
+const User = require("../models/User")
 const { SchemaDirectiveVisitor, AuthenticationError } = require('apollo-server-express');
 
-class Auth extends SchemaDirectiveVisitor {
+class IsLoggedIn extends SchemaDirectiveVisitor {
     visitFieldDefinition(field) {
-
       const { resolve = defaultFieldResolver } = field;
-
       field.resolve = async function (...args) {
-        const context = args[2];
-        console.log(context);
-        if (context.user) {
-          console.log("hello!");
+        if (User.findOne({id: args[2].id})) {
           return await resolve.apply(this, args);
         } else {
-          console.log("bbye");
-          
           throw new AuthenticationError("You need to be logged in.");
         }
       };
     }
   }
 
-  class Test extends SchemaDirectiveVisitor {
+  class IsAdmin extends SchemaDirectiveVisitor {
     visitFieldDefinition(field) {
-
       const { resolve = defaultFieldResolver } = field;
-
       field.resolve = async function (...args) {
-        const context = args[2];
-        console.log(context);
-        if (context.user) {
-          console.log("hello!");
+        if ( args[2].type === "admin") {
           return await resolve.apply(this, args);
         } else {
-          console.log("bbye");
-          
-          throw new AuthenticationError("You need to be logged in.");
+          throw new AuthenticationError("You don't have permission to do this.");
         }
       };
     }
   }
 
-
+  class IsEmployee extends SchemaDirectiveVisitor {
+    visitFieldDefinition(field) {
+      const { resolve = defaultFieldResolver } = field;
+      field.resolve = async function (...args) {
+        if ( args[2].type === "employee") {
+          return await resolve.apply(this, args);
+        } else {
+          throw new AuthenticationError("You don't have permission to do this.");
+        }
+      };
+    }
+  }
   
   const getContext = (req) => {
     const token = req.headers.authorization;
     if (typeof token === typeof undefined) return req;
-    return JWT.verify(token, process.env.SECRET, function (err, result) {
-      if (err) return req;
-      return UserModel.findOne({ _id: result._id }).then((user) => {
-        return { ...req, user };
-      });
-    });
+    return jwt.verify(token, process.env.SECRET);
   }
   
   module.exports = {
+    IsLoggedIn,
+    IsAdmin,
+    IsEmployee,
     getContext,
-    Auth,
-    Test
   }

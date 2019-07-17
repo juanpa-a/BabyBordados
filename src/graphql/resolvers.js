@@ -8,27 +8,48 @@ const bcrypt  = require("bcryptjs")
 
 const resolvers = {
   Query: {
-    hi: () => {"hi there!"},
-    test: () => {"test"},
+    hi: () => "hi there!",
+    test: () => "test",
   },
   Mutation: {
 
-    register: (_, {user_info: { name, email, lastname, password }} ) => {
+    register: (_, {user_info: { name, email, lastname, password, type }} ) => {
 
       const user = new User({
         name: name,
-        email: email,
         lastname: lastname,
+        email: email,
         password: password,
+        type: type,
       });
       try{
         user.save();
         return { 
-          token: jwt.sign(user.toJSON(), process.env.SECRET, {expiresIn: "15min"}), 
+          token: jwt.sign(user.toJSON(), process.env.SECRET, {expiresIn: "1d"}), 
           message: `Successfully registered: ${name}.` 
         };
       } catch(error) {
-        return { token: "", message: `User not reistered: ${error}` };
+        return { token: "", message: `User not registered: ${error}` };
+      }
+    },
+
+    add_employee: (_, {user_info: { name, email, lastname, password,  }} ) => {
+
+      const user = new User({
+        name: name,
+        lastname: lastname,
+        email: email,
+        password: password,
+        type: "employee",
+      });
+      try{
+        user.save();
+        return { 
+          token: jwt.sign(user.toJSON(), process.env.SECRET, {expiresIn: "1d"}), 
+          message: `Successfully registered: ${name}.` 
+        };
+      } catch(error) {
+        return { token: "", message: `User not registered: ${error}` };
       }
     },
 
@@ -47,10 +68,11 @@ const resolvers = {
         name: user.name,
         lastname: user.lastname,
         email: user.email,
+        type: user.type
       }
       return {
-        token: jwt.sign(payload, process.env.SECRET, {expiresIn: "15min"}), 
-        message: `Successfully logged: ${email} in!`
+        token: jwt.sign(payload, process.env.SECRET, {expiresIn: "1d"}), 
+        message: `Successfully logged ${email} in!`
       };
     },
 
@@ -73,8 +95,41 @@ const resolvers = {
       }
     },
 
-    post_comment: (_, { comment_info: { content, posted_by } }) => {
+    
 
+    change_product_stock: (_, { product_info: { name, stock } }) => {
+      try {
+        Product.findOneAndUpdate({name: name}, {stock: stock }).then(function(res) {
+          assert(res === stock);
+          done();
+        })
+      } catch(error) {
+        throw new Error(error);
+      }
+    },
+
+    change_product_price: (_, { product_info: { name, price } }) => {
+      try {
+        Product.findOneAndUpdate({name: name}, {price: price }).then(function(res) {
+          assert(res === price);
+          done();
+        })
+      } catch(error) {
+        throw new Error(error);
+      }
+    },
+
+    delete_product: (_, { product_info: {id}}) => {
+      Product.findByIdAndRemove({id: id}, (error, _)=>{
+        if(error){
+          return {message: error};
+        } else {
+          return { message: "Product deleted" };
+        }
+      }); 
+    },
+
+    post_comment: (_, { comment_info: { content, posted_by } }) => {
       const comment = new Comment({
         content: content,
         posted_by: posted_by,
@@ -87,6 +142,16 @@ const resolvers = {
       catch(error) {
         return { message: `Something went wrong: ${error}` };
       }
+    },
+
+    delete_comment: (_, { comment_info: {id}}) => {
+      Comment.findByIdAndRemove({id: id}, (error, _)=>{
+        if(error){
+          return {message: error};
+        } else {
+          return { message: "Comment deleted" };
+        }
+      }); 
     },
   }
 };

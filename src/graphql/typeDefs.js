@@ -1,17 +1,22 @@
 const { gql } = require('apollo-server');
 
 const typeDefs = gql`
-  directive @Auth on QUERY | FIELD_DEFINITION | FIELD
+  directive @is_admin on FIELD_DEFINITION
+  directive @is_employee on FIELD_DEFINITION
+  directive @is_logged_in on FIELD_DEFINITION 
 
-  input LoginInfo {
-    email: String!
-    password: String!
-  }
   type Auth {
     token: String
     message: String
   }
-
+  input LoginInfo {
+    email: String!
+    password: String!
+  }
+  input EmployeeInfo {
+    email: String!
+    type: String!
+  }
   input UserInfo {
     name: String!
     lastname: String! 
@@ -30,25 +35,28 @@ const typeDefs = gql`
     content: String!
     posted_by: String!
   }
-  
   type Message {
     message: String
   }
   type Query {
-    hi: String!
-    test: String!
+    hi: String! @is_admin
+    test: String! @is_logged_in
     # get_product
   }
   type Mutation {
-    register(user_info: UserInfo): Auth
+    register(user_info: UserInfo): Auth 
     login(login_info: LoginInfo): Auth
-    # change_user_type
+    add_employee(user_info: UserInfo): Message @is_admin
 
-    add_product(product_info: ProductInfo): Message @Auth
-    post_comment(comment_info: CommentInfo): Message 
+    change_product_stock(product_info: ProductInfo): Message @is_employee @is_admin
+    change_product_price(product_info: ProductInfo): Message @is_employee @is_admin
 
+    add_product(product_info: ProductInfo): Message  @is_employee @is_admin
+    delete_product(product_info: ProductInfo): Message @is_employee @is_admin
+
+    post_comment(comment_info: CommentInfo): Message @is_logged_in
+    delete_comment(comment_info: CommentInfo): Message @is_employee @is_admin
   }
-
 `;
 
 module.exports = typeDefs;
